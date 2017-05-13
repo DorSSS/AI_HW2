@@ -140,14 +140,46 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         for action in actions:
           successor = gameState.generateSuccessor(agent, action)
-          #start with ghost 1 - random choice
           temp_state = minimax_state(0, gameState.getNumAgents(), successor, self.depth, self.evaluationFunction) 
           if temp_state > best_state:
             best_state = temp_state
             bestAction = action
         return bestAction
+
+class AlphaBetaAgent(MultiAgentSearchAgent):
+    """
+      Your minimax agent with alpha-beta pruning (question 2)
+    """
+
+    def getAction(self, gameState):
+        """
+          Returns the minimax action using self.depth and self.evaluationFunction
+        """
+        bestState = float("-inf") # starting from pacmen, maximum
+        bestAction = []
+        agent = 0 #pacmen
+        alpha = float("-inf") #max
+        beta = float("inf") #min
+        actions = gameState.getLegalActions(agent)
+
+        for action in actions:
+          successor = gameState.generateSuccessor(agent, action)
+          temp_state = minimax_state(0, gameState.getNumAgents(), successor, self.depth, self.evaluationFunction, 
+            True, alpha, beta) 
+          if temp_state > bestState:
+            bestState = temp_state
+            bestAction = action
+
+          if bestState > beta:
+            return bestAction
+          alpha = max(alpha, bestState)
+          
+        return bestAction
+
         
-def minimax_state(agent, agentsCount, state, depth, evalFunc):
+        
+
+def minimax_state(agent, agentsCount, state, depth, evalFunc, prune=False, alpha=0, beta=0):
       
       agentList = range(agentsCount)
 
@@ -163,30 +195,33 @@ def minimax_state(agent, agentsCount, state, depth, evalFunc):
       successors = [state.generateSuccessor(agent, action) for action in actions]
       for successor in successors:
         if agent == 0: # agent is pacmen
-          best_state = max(best_state, minimax_state(agentList[agent+1], agentsCount, successor, depth, evalFunc))
+          best_state = max(best_state, minimax_state(agentList[agent+1], agentsCount, successor, 
+            depth, evalFunc, prune, alpha, beta))
+          
+          if prune:
+            alpha = max(alpha, best_state)
+            if best_state > beta:
+              return best_state
+
         elif agent == agentList[-1]: # agent is the last ghost
-          best_state = min(best_state, minimax_state(agentList[0], agentsCount, successor, depth - 1, evalFunc))
+          best_state = min(best_state, minimax_state(agentList[0], agentsCount, successor, 
+            depth - 1, evalFunc, prune, alpha, beta))
+
+          if prune:
+            beta = min(beta,best_state)
+            if best_state < alpha:
+              return best_state
+
         else: # agent is middle ghost 
-          best_state = min(best_state, minimax_state(agentList[agent+1], agentsCount, successor, depth, evalFunc))
+          best_state = min(best_state, minimax_state(agentList[agent+1], agentsCount, successor,
+            depth, evalFunc, prune, alpha, beta))
+          
+          if prune:
+            beta = min(beta,best_state)
+            if best_state < alpha:
+              return best_state
       
       return best_state
-
-class AlphaBetaAgent(MultiAgentSearchAgent):
-    """
-      Your minimax agent with alpha-beta pruning (question 2)
-    """
-
-    def getAction(self, gameState):
-        """
-          Returns the minimax action using self.depth and self.evaluationFunction
-        """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
-        
-        
-
-
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 3)
