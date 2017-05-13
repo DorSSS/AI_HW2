@@ -15,7 +15,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
-
+from itertools import product
 from game import Agent
 
 class ReflexAgent(Agent):
@@ -179,7 +179,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         
         
 
-def minimax_state(agent, agentsCount, state, depth, evalFunc, prune=False, alpha=0, beta=0):
+def minimax_state(agent, agentsCount, state, depth, evalFunc, prune=False, alpha=0, beta=0, chance_ghosts=False):
       """
       Helper method for calculating min and max values recursively for each state and agent
       used for q2 and q3
@@ -198,39 +198,39 @@ def minimax_state(agent, agentsCount, state, depth, evalFunc, prune=False, alpha
       actions = state.getLegalActions(agent)
       successors = [state.generateSuccessor(agent, action) for action in actions]
       for successor in successors:
-        if agent == 0: # agent is pacmen
-          best_state = max(best_state, minimax_state(agentList[agent+1], agentsCount, successor, 
-            depth, evalFunc, prune, alpha, beta))
-          
-          if prune:
-            alpha = max(alpha, best_state)
-            if best_state > beta:
-              return best_state
+          if agent == 0: # agent is pacmen
+            best_state = max(best_state, minimax_state(agentList[agent+1], agentsCount, successor, 
+              depth, evalFunc, prune, alpha, beta))
+            
+            if prune:
+              alpha = max(alpha, best_state)
+              if best_state > beta:
+                return best_state
 
-        elif agent == agentList[-1]: # agent is the last ghost
-          best_state = min(best_state, minimax_state(agentList[0], agentsCount, successor, 
-            depth - 1, evalFunc, prune, alpha, beta))
+          elif agent == agentList[-1]: # agent is the last ghost
+            best_state = min(best_state, minimax_state(agentList[0], agentsCount, successor, 
+              depth - 1, evalFunc, prune, alpha, beta))
 
-          if prune:
-            beta = min(beta,best_state)
-            if best_state < alpha:
-              return best_state
+            if prune:
+              beta = min(beta,best_state)
+              if best_state < alpha:
+                return best_state
 
-        else: # agent is middle ghost 
-          best_state = min(best_state, minimax_state(agentList[agent+1], agentsCount, successor,
-            depth, evalFunc, prune, alpha, beta))
-          
-          if prune:
-            beta = min(beta,best_state)
-            if best_state < alpha:
-              return best_state
-      
+          else: # agent is middle ghost 
+            best_state = min(best_state, minimax_state(agentList[agent+1], agentsCount, successor,
+              depth, evalFunc, prune, alpha, beta))
+            
+            if prune:
+              beta = min(beta,best_state)
+              if best_state < alpha:
+                return best_state
       return best_state
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 3)
     """
+    
 
     def getAction(self, gameState):
         """
@@ -240,7 +240,62 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #print gameState.getPacmanState().getPosition()
+        action = self.getBestAction(gameState.getNumAgents(), gameState, self.depth, self.evaluationFunction)[1]
+        #print action
+        return action
+
+    def getBestAction(self, agentsCount, state, depth, evalFunc,action=None):
+
+        PACMAN = 0        
+        if depth <= 0 or state.isWin() or state.isLose():
+          return state, action
+        possible_single_agent_actions = []
+        for agent in range(agentsCount):
+          possible_single_agent_actions.append(state.getLegalActions(agent))
+        
+        possible_states = []
+        possible_actions = []
+        for action in product(*possible_single_agent_actions):
+          possible_actions.append(action)
+
+        for action in possible_actions:
+          possible_state = state
+          for agent in range(0, len(action)):
+            if not (possible_state.isWin() or possible_state.isLose()):
+              possible_state = possible_state.generateSuccessor(agent, action[agent])
+          possible_states.append(possible_state)
+
+        state_chances = 1.0 / (float(len(possible_states)) / float((len(state.getLegalActions(PACMAN)))))
+
+        best_action = 'None'
+        best_state_index = -1
+        best_state_score = -99999
+        all_scores = {}
+        all_avgs ={'None': -999999}
+        for action in possible_actions:
+          all_scores[action[0]] = []
+        for index in range(0,len(possible_states)):
+            action =  possible_actions[index][0]
+            score = state_chances * float(evalFunc(self.getBestAction(agentsCount, possible_states[index], depth - 1, evalFunc, action )[0]))
+            all_scores[action].append([state,score])
+
+        for action in all_scores.keys():
+          all_avgs[action] = sum([score[1] for score in all_scores[action]]) / len(all_scores[action])
+
+        for action in all_avgs.keys():
+          if all_avgs[action] > all_avgs[best_action]:
+            best_action = action
+        
+        for future_state_index in range(0,len(all_scores[best_action])):
+          if all_scores[best_action][future_state_index] > best_state_score:
+            best_state_index = future_state_index
+            best_state_score = all_scores[best_action][future_state_index]
+          if all_scores[best_action][future_state_index] == best_state_score:
+            best_state_index = random.choice([best_state_index,future_state_index])
+        return possible_states[future_state_index], best_action
+
+
 
 ################################################
 #    IGNORE THE CODE BELOW - DON'T CHANGE IT
