@@ -180,7 +180,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         
 
 def minimax_state(agent, agentsCount, state, depth, evalFunc, prune=False, alpha=0, beta=0):
-      
+      """
+      Helper method for calculating min and max values recursively for each state and agent
+      used for q2 and q3
+      in q2 - pruning parameters are ignored
+      """
       agentList = range(agentsCount)
 
       if depth <= 0 or state.isWin() or state.isLose():
@@ -222,6 +226,7 @@ def minimax_state(agent, agentsCount, state, depth, evalFunc, prune=False, alpha
               return best_state
       
       return best_state
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 3)
