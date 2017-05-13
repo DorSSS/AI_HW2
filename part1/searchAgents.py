@@ -396,13 +396,32 @@ def cornersHeuristic(state, problem):
     heuristic = 0
 
     currentPoint = currPos
-    while len(unvisitedCorners) > 0:
-        distance, corner = min([(util.manhattanDistance(currentPoint, corner), corner) for corner in unvisitedCorners])
-        heuristic += distance
-        currentPoint = corner
-        unvisitedCorners.remove(corner)
+    min = 99999999
+    ''' for corner in unvisitedCorners:
+        dist = util.manhattanDistance(currentPoint, corner)
+        if min > dist:
+            min = dist
+            closest_corner = corner
+    for corner in unvisitedCorners:
+         if corner != closest_corner:
+              min += util.manhattanDistance(closest_corner, corner)
 
-    return heuristic
+    if min == 99999999:
+        min = 0
+    return min'''
+
+    total_dist = 0
+    while len(unvisitedCorners) != 0:
+        for corner in unvisitedCorners:
+            dist = util.manhattanDistance(currentPoint, corner)
+            if min > dist:
+                min = dist
+                closest_corner = corner
+        total_dist += min
+        min = 99999999
+        currentPoint = closest_corner
+        unvisitedCorners.remove(closest_corner)
+    return total_dist
 
 
 class AStarCornersAgent(SearchAgent):

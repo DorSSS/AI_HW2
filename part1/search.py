@@ -195,9 +195,17 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         for next_state, next_act, next_cost in problem.getSuccessors(current_node.state):
             next_node = SearchNode(next_state,next_act, next_cost, current_node)
             next_node.cost_from_root = current_node.cost_from_root + next_node.cost
-            if not next_node in explored_nodes:
-                queue.push(next_node, next_node.cost_from_root + heuristic(next_state,problem))
+            if (not next_node in explored_nodes) and (not next_node.state in queue.heap):
+                is_in_queue = False
+                for queue_node in queue.heap:
+                    if next_node == queue_node[2]:
+                        is_in_queue = True  #find if not already in queue
+                        break
+                if is_in_queue == False:
+                    queue.push(next_node, next_node.cost_from_root + heuristic(next_state,problem))
         current_node = queue.pop()
+#        print str(current_node.state.position) + '   ::::   cost from root: ' + str(next_node.cost_from_root) + ' :::: heuristic: ' + str(heuristic(next_state,problem))
+
     return current_node.get_actions_chain()
 
 # Abbreviations
