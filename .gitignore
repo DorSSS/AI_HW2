@@ -6,3 +6,5 @@ part1/\.vscode/settings\.json
 part1/\.vscode/
 
 \.vscode/
+
+*.pyc

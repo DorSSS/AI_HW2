@@ -248,8 +248,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     def getBestAction(self, agentsCount, state, depth, evalFunc,action=None):
 
         PACMAN = 0        
-        if depth <= 0 or state.isWin() or state.isLose():
+        if depth == 0 or state.isWin() or state.isLose(): 
           return state, action
+          
         possible_single_agent_actions = []
         for agent in range(agentsCount):
           possible_single_agent_actions.append(state.getLegalActions(agent))
@@ -275,13 +276,32 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         all_avgs ={'None': -999999}
         for action in possible_actions:
           all_scores[action[0]] = []
+    #    print state.getPacmanState().getPosition()
+
         for index in range(0,len(possible_states)):
             action =  possible_actions[index][0]
+   #         print action
             score = state_chances * float(evalFunc(self.getBestAction(agentsCount, possible_states[index], depth - 1, evalFunc, action )[0]))
             all_scores[action].append([state,score])
-
+  #      print '*****************'
+        best_scores = {}
         for action in all_scores.keys():
-          all_avgs[action] = sum([score[1] for score in all_scores[action]]) / len(all_scores[action])
+          #all_avgs[action] = sum([score[1] for score in all_scores[action]]) / len(all_scores[action])
+          best_scores[action] = max([score[1] for score in all_scores[action]])
+        best_action = None
+        best_score = -9999
+        for action in best_scores.keys():
+          if best_scores[action] > best_score:
+            best_action = action
+            best_score = best_scores[action]
+        
+        best_score = -9999
+        best_state = None
+        for possible_state in all_scores[best_action]:
+          if possible_state[1] > best_score:
+            best_score = possible_state[1]
+            best_state = possible_state[0]
+        return best_state, best_action
 
         for action in all_avgs.keys():
           if all_avgs[action] > all_avgs[best_action]:
