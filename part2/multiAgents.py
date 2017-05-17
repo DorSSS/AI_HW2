@@ -240,9 +240,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        #print gameState.getPacmanState().getPosition()
+
         action = self.getBestAction(gameState.getNumAgents(), gameState, self.depth, self.evaluationFunction)[1]
-        #print action
         return action
 
     def getBestAction(self, agentsCount, state, depth, evalFunc,action=None):
@@ -276,17 +275,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         all_avgs ={'None': -999999}
         for action in possible_actions:
           all_scores[action[0]] = []
-    #    print state.getPacmanState().getPosition()
 
         for index in range(0,len(possible_states)):
             action =  possible_actions[index][0]
-   #         print action
             score = state_chances * float(evalFunc(self.getBestAction(agentsCount, possible_states[index], depth - 1, evalFunc, action )[0]))
             all_scores[action].append([state,score])
-  #      print '*****************'
         best_scores = {}
         for action in all_scores.keys():
-          #all_avgs[action] = sum([score[1] for score in all_scores[action]]) / len(all_scores[action])
           best_scores[action] = max([score[1] for score in all_scores[action]])
         best_action = None
         best_score = -9999
@@ -302,20 +297,6 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             best_score = possible_state[1]
             best_state = possible_state[0]
         return best_state, best_action
-
-        for action in all_avgs.keys():
-          if all_avgs[action] > all_avgs[best_action]:
-            best_action = action
-        
-        for future_state_index in range(0,len(all_scores[best_action])):
-          if all_scores[best_action][future_state_index] > best_state_score:
-            best_state_index = future_state_index
-            best_state_score = all_scores[best_action][future_state_index]
-          if all_scores[best_action][future_state_index] == best_state_score:
-            best_state_index = random.choice([best_state_index,future_state_index])
-        return possible_states[future_state_index], best_action
-
-
 
 ################################################
 #    IGNORE THE CODE BELOW - DON'T CHANGE IT
