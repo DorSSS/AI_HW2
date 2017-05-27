@@ -230,7 +230,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 3)
     """
-    
+
+
 
     def getAction(self, gameState):
         """
@@ -240,9 +241,49 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
+        max_value = -99999999.0
+        best_action = []
+        agent = 0
+        actions = gameState.getLegalActions(agent)
+        successors = []
+        for action in actions:
+            successors.append((action,gameState.generateSuccessor(agent,action)))
 
-        action = self.getBestAction(gameState.getNumAgents(), gameState, self.depth, self.evaluationFunction)[1]
-        return action
+        for successor in successors:
+            current_value = self.expect_action_value(1, range(gameState.getNumAgents()), successor[1], self.depth, self.evaluationFunction)
+            if current_value > max_value:
+                best_action = successor[0]
+                max_value = current_value
+
+        return best_action
+
+    def expect_action_value(self, agent, agent_list, state, depth, evalFunc):
+        PACMAN = 0
+        if state.isLose() or state.isWin() or depth == 0: #terminate
+            return evalFunc(state)
+
+        max_value = 0
+        if agent == PACMAN:
+            max_value = -9999999.0
+
+        actions = state.getLegalActions(agent)
+        successors = []
+        for action in actions:
+            successors.append(state.generateSuccessor(agent, action))
+
+        prob = 1.0 / float(len(successors))
+
+        for successor_index in range(len(successors)):
+            successor = successors[successor_index]
+            if agent == PACMAN:
+                max_value = max(max_value,self.expect_action_value(agent_list[1], agent_list, successor, depth, evalFunc)) # get the best action
+            elif agent == agent_list[-1]:
+                max_value = max_value + (prob * self.expect_action_value(agent_list[0], agent_list, successor, depth - 1, evalFunc)) # procceed to the next depth
+            else:
+                max_value = max_value + (prob * self.expect_action_value(agent_list[agent + 1], agent_list, successor, depth,evalFunc)) # procceed to the next agent
+
+        return max_value
+
 
     def getBestAction(self, agentsCount, state, depth, evalFunc,action=None):
 

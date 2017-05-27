@@ -184,7 +184,6 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-
     problem = problem #type: SearchProblem
     explored_nodes = [] 
     queue = util.PriorityQueue()
@@ -201,10 +200,11 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                     if next_node == queue_node[2]:
                         is_in_queue = True  #find if not already in queue
                         break
-                if is_in_queue == False:
+                if (is_in_queue == False):
                     queue.push(next_node, next_node.cost_from_root + heuristic(next_state,problem))
+                elif queue_node[0] > next_node.cost_from_root + heuristic(next_state,problem):
+                    queue.update(next_node, next_node.cost_from_root + heuristic(next_state,problem))
         current_node = queue.pop()
-#        print str(current_node.state.position) + '   ::::   cost from root: ' + str(next_node.cost_from_root) + ' :::: heuristic: ' + str(heuristic(next_state,problem))
 
     return current_node.get_actions_chain()
 
