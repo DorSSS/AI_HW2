@@ -133,18 +133,45 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
-        best_state = float("-inf") # starting from pacmen, maximum
+        best_state = float("-inf")
         bestAction = []
         agent = 0 #pacmen
         actions = gameState.getLegalActions(agent)
-
-        for action in actions:
-          successor = gameState.generateSuccessor(agent, action)
-          temp_state = minimax_state(0, gameState.getNumAgents(), successor, self.depth, self.evaluationFunction) 
-          if temp_state > best_state:
-            best_state = temp_state
-            bestAction = action
+        successors = [(action, gameState.generateSuccessor(agent, action)) for action in actions]
+        for successor in successors:
+            temp_state = minimax(1, gameState.getNumAgents(), successor[1], self.depth, self.evaluationFunction)
+            if temp_state > best_state:
+              best_state = temp_state
+              bestAction = successor[0]
         return bestAction
+
+def minimax(agent, agentsCount, state, depth, evalFunc):
+      """
+      Helper method for calculating min and max values recursively for each state and agent
+      """
+      agentList = range(agentsCount)
+
+      if depth <= 0 or state.isWin() or state.isLose():
+        return evalFunc(state)
+        
+      if agent == 0: #pacmen
+        best_state = float("-inf") #max
+      else:
+        best_state = float("inf") #min
+              
+      actions = state.getLegalActions(agent)
+      successors = [state.generateSuccessor(agent, action) for action in actions]
+      for successor in successors:
+          if agent == 0: # agent is pacmen
+            best_state = max(best_state, minimax(agentList[agent+1], agentsCount, successor, depth, evalFunc))
+
+          elif agent == agentList[-1]: # agent is the last ghost
+            best_state = min(best_state, minimax(agentList[0], agentsCount, successor, depth - 1, evalFunc))
+
+          else: # agent is middle ghost 
+            best_state = min(best_state, minimax(agentList[agent+1], agentsCount, successor, depth, evalFunc))
+
+      return best_state
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -161,14 +188,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         alpha = float("-inf") #max
         beta = float("inf") #min
         actions = gameState.getLegalActions(agent)
-
-        for action in actions:
-          successor = gameState.generateSuccessor(agent, action)
-          temp_state = minimax_state(0, gameState.getNumAgents(), successor, self.depth, self.evaluationFunction, 
-            True, alpha, beta) 
+        successors = [(action, gameState.generateSuccessor(agent, action)) for action in actions]
+        for successor in successors:
+          temp_state = minimaxPrune(1, gameState.getNumAgents(), successor[1], self.depth, self.evaluationFunction, 
+             alpha, beta) 
           if temp_state > bestState:
             bestState = temp_state
-            bestAction = action
+            bestAction = successor[0]
 
           if bestState > beta:
             return bestAction
@@ -176,55 +202,41 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           
         return bestAction
 
-        
-        
+def minimaxPrune(agent, agentsCount, state, depth, evalFunc, alpha, beta):
 
-def minimax_state(agent, agentsCount, state, depth, evalFunc, prune=False, alpha=0, beta=0, chance_ghosts=False):
-      """
-      Helper method for calculating min and max values recursively for each state and agent
-      used for q2 and q3
-      in q2 - pruning parameters are ignored
-      """
       agentList = range(agentsCount)
 
       if depth <= 0 or state.isWin() or state.isLose():
         return evalFunc(state)
-        
+    
       if agent == 0: #pacmen
         best_state = float("-inf") #max
       else:
         best_state = float("inf") #min
-              
+          
       actions = state.getLegalActions(agent)
-      successors = [state.generateSuccessor(agent, action) for action in actions]
-      for successor in successors:
-          if agent == 0: # agent is pacmen
-            best_state = max(best_state, minimax_state(agentList[agent+1], agentsCount, successor, 
-              depth, evalFunc, prune, alpha, beta))
+      for action in actions:
+        successor = state.generateSuccessor(agent, action)
+        
+        if agent == 0:
+          best_state = max(best_state, minimaxPrune(agentList[agent+1], agentsCount, successor, depth, evalFunc, alpha, beta))
+          alpha = max(alpha, best_state)
+          if best_state > beta:
+            return best_state
+        
+        elif agent == agentList[-1]:  
+          best_state = min(best_state, minimaxPrune(agentList[0], agentsCount, successor, depth - 1, evalFunc, alpha, beta))
+          beta = min(beta, best_state)
+          if best_state < alpha:
+            return best_state
             
-            if prune:
-              alpha = max(alpha, best_state)
-              if best_state > beta:
-                return best_state
+        else:
+          best_state = min(best_state, minimaxPrune(agentList[agent+1], agentsCount, successor, depth, evalFunc, alpha, beta))
+          beta = min(beta, best_state)
+          if best_state < alpha:
+            return best_state
 
-          elif agent == agentList[-1]: # agent is the last ghost
-            best_state = min(best_state, minimax_state(agentList[0], agentsCount, successor, 
-              depth - 1, evalFunc, prune, alpha, beta))
-
-            if prune:
-              beta = min(beta,best_state)
-              if best_state < alpha:
-                return best_state
-
-          else: # agent is middle ghost 
-            best_state = min(best_state, minimax_state(agentList[agent+1], agentsCount, successor,
-              depth, evalFunc, prune, alpha, beta))
-            
-            if prune:
-              beta = min(beta,best_state)
-              if best_state < alpha:
-                return best_state
-      return best_state
+      return best_state       
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
